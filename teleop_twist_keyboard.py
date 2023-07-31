@@ -45,7 +45,7 @@ else:
 
 msg = """
 This node takes keypresses from the keyboard and publishes them
-as Twist messages. It works best with a US keyboard layout.
+as Twist/TwistStamped messages. It works best with a US keyboard layout.
 ---------------------------
 Moving around:
    u    i    o
@@ -135,7 +135,20 @@ def main():
     rclpy.init()
 
     node = rclpy.create_node('teleop_twist_keyboard')
-    pub = node.create_publisher(geometry_msgs.msg.Twist, 'cmd_vel', 10)
+
+    # parameters
+    node.declare_parameter('stamped', False)
+    node.declare_parameter('frame_id', '')
+
+    stamped = node.get_parameter('stamped').value
+    frame_id = node.get_parameter('frame_id').value
+
+    if stamped:
+        TwistMsg = geometry_msgs.msg.TwistStamped
+    else:
+        TwistMsg = geometry_msgs.msg.Twist
+
+    pub = node.create_publisher(TwistMsg, 'cmd_vel', 10)
 
     speed = 0.5
     turn = 1.0
@@ -144,6 +157,15 @@ def main():
     z = 0.0
     th = 0.0
     status = 0.0
+
+    twist_msg = TwistMsg()
+
+    if stamped:
+        twist = twist_msg.twist
+        twist_msg.header.stamp = node.get_clock().now().to_msg()
+        twist_msg.header.frame_id = frame_id
+    else:
+        twist = twist_msg
 
     try:
         print(msg)
@@ -171,27 +193,31 @@ def main():
                 if (key == '\x03'):
                     break
 
-            twist = geometry_msgs.msg.Twist()
+            if stamped:
+                twist_msg.header.stamp = node.get_clock().now().to_msg()
+
             twist.linear.x = x * speed
             twist.linear.y = y * speed
             twist.linear.z = z * speed
             twist.angular.x = 0.0
             twist.angular.y = 0.0
             twist.angular.z = th * turn
-            pub.publish(twist)
+            pub.publish(twist_msg)
 
     except Exception as e:
         print(e)
 
     finally:
-        twist = geometry_msgs.msg.Twist()
+        if stamped:
+            twist_msg.header.stamp = node.get_clock().now().to_msg()
+
         twist.linear.x = 0.0
         twist.linear.y = 0.0
         twist.linear.z = 0.0
         twist.angular.x = 0.0
         twist.angular.y = 0.0
         twist.angular.z = 0.0
-        pub.publish(twist)
+        pub.publish(twist_msg)
 
         restoreTerminalSettings(settings)
 
