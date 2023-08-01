@@ -35,6 +35,7 @@ import sys
 
 import geometry_msgs.msg
 import rclpy
+import threading
 
 if sys.platform == 'win32':
     import msvcrt
@@ -137,8 +138,8 @@ def main():
     node = rclpy.create_node('teleop_twist_keyboard')
 
     # parameters
-    stamped = node.declare_parameter('stamped', False)
-    frame_id = node.declare_parameter('frame_id', '')
+    stamped = node.declare_parameter('stamped', False).value
+    frame_id = node.declare_parameter('frame_id', '').value
     if not stamped and frame_id:
         raise Exception("'frame_id' can only be set when 'stamped' is True")
 
@@ -148,6 +149,9 @@ def main():
         TwistMsg = geometry_msgs.msg.Twist
 
     pub = node.create_publisher(TwistMsg, 'cmd_vel', 10)
+
+    spinner = threading.Thread(target=rclpy.spin, args=(node,))
+    spinner.start()
 
     speed = 0.5
     turn = 1.0
@@ -217,6 +221,8 @@ def main():
         twist.angular.y = 0.0
         twist.angular.z = 0.0
         pub.publish(twist_msg)
+        rclpy.shutdown()
+        spinner.join()
 
         restoreTerminalSettings(settings)
 
