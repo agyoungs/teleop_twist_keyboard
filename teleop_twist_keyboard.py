@@ -137,11 +137,10 @@ def main():
     node = rclpy.create_node('teleop_twist_keyboard')
 
     # parameters
-    node.declare_parameter('stamped', False)
-    node.declare_parameter('frame_id', '')
-
-    stamped = node.get_parameter('stamped').value
-    frame_id = node.get_parameter('frame_id').value
+    stamped = node.declare_parameter('stamped', False)
+    frame_id = node.declare_parameter('frame_id', '')
+    if not stamped and frame_id:
+        raise Exception("'frame_id' can only be set when 'stamped' is True")
 
     if stamped:
         TwistMsg = geometry_msgs.msg.TwistStamped
