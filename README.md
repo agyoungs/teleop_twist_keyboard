@@ -37,5 +37,5 @@ CTRL-C to quit
 ## Parameters
 - `stamped (bool, default: false)`
   - If false (the default), publish a `geometry_msgs/msg/Twist` message.  If true, publish a `geometry_msgs/msg/TwistStamped` message.
-- `frame_id` (string, default: '')`
+- `frame_id (string, default: '')`
   - When `stamped` is true, the frame_id to use when publishing the `geometry_msgs/msg/TwistStamped` message.
